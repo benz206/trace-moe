@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use reqwest::{Client as HttpClient, Method, RequestBuilder, Response, Url};
+use reqwest::{header::HeaderMap, Client as HttpClient, Method, RequestBuilder, Response, Url};
 
 use crate::error::{ApiError, Result};
 
@@ -9,6 +9,7 @@ pub struct Client {
     base_url: Url,
     http: HttpClient,
     api_key: Option<String>,
+    default_headers: HeaderMap,
 }
 
 impl Client {
@@ -22,6 +23,7 @@ impl Client {
             base_url: Url::parse(base_url)?,
             http,
             api_key: None,
+            default_headers: HeaderMap::new(),
         })
     }
 
@@ -30,34 +32,39 @@ impl Client {
         self
     }
 
-    fn request(&self, method: Method, path: &str) -> Result<RequestBuilder> {
+    pub fn with_default_header(mut self, key: reqwest::header::HeaderName, value: reqwest::header::HeaderValue) -> Self {
+        self.default_headers.insert(key, value);
+        self
+    }
+
+    pub(crate) fn request(&self, method: Method, path: &str) -> Result<RequestBuilder> {
         let url = self.base_url.join(path)?;
-        let mut req = self.http.request(method, url);
+        let mut req = self.http.request(method, url).headers(self.default_headers.clone());
         if let Some(key) = &self.api_key {
             req = req.bearer_auth(key);
         }
         Ok(req)
     }
 
-    pub async fn get_json<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        let resp = self.request(Method::GET, path)?.send().await?;
+    pub async fn get_json<T: serde::de::DeserializeOwned>(&self, path: impl AsRef<str>) -> Result<T> {
+        let resp = self.request(Method::GET, path.as_ref())?.send().await?;
         Self::parse_json(resp).await
     }
 
     pub async fn post_json<B: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
-        path: &str,
+        path: impl AsRef<str>,
         body: &B,
     ) -> Result<T> {
         let resp = self
-            .request(Method::POST, path)?
+            .request(Method::POST, path.as_ref())?
             .json(body)
             .send()
             .await?;
         Self::parse_json(resp).await
     }
 
-    async fn parse_json<T: serde::de::DeserializeOwned>(resp: Response) -> Result<T> {
+    pub(crate) async fn parse_json<T: serde::de::DeserializeOwned>(resp: Response) -> Result<T> {
         let status = resp.status();
         let text = resp.text().await?;
         if !status.is_success() {
