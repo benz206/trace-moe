@@ -1,6 +1,6 @@
 [package]
 name = "trace-moe"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 description = "Client library for the trace.moe anime scene search API."
 license = "MIT"
