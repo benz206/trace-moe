@@ -4,17 +4,8 @@ Rust client for the [trace.moe](https://trace.moe/) anime scene search API.
 
 ## Install
 
-Once published on crates.io:
-
 ```bash
 cargo add trace-moe
-```
-
-Until then (from source):
-
-```toml
-[dependencies]
-trace-moe = { path = "." }
 ```
 
 ## Quickstart
