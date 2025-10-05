@@ -51,7 +51,7 @@ pub enum Episode {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct anilist_infoTitle {
+pub struct AnilistInfoTitle {
     pub native: Option<String>,
     pub romaji: Option<String>,
     pub english: Option<String>,
@@ -59,10 +59,10 @@ pub struct anilist_infoTitle {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct anilist_info {
+pub struct AnilistInfo {
     pub id: i64,
     pub id_mal: Option<i64>,
-    pub title: anilist_infoTitle,
+    pub title: AnilistInfoTitle,
     pub synonyms: Vec<String>,
     pub is_adult: bool,
 }

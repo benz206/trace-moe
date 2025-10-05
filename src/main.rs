@@ -1,5 +1,4 @@
-use trace_moe::client::Client;
-use trace_moe::tracemoe::{new_client_with_key, build_query_path, SearchQuery, SearchResponse};
+use trace_moe::tracemoe::{new_client_with_key, SearchQuery, SearchResponse};
 
 #[tokio::main]
 async fn main() {
