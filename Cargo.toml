@@ -1,7 +1,12 @@
 [package]
 name = "trace-moe"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+description = "Client library for the trace.moe anime scene search API."
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/benz206/trace-moe"
+documentation = "https://docs.rs/trace-moe"
 
 [dependencies]
 reqwest = { version = "0.12", features = ["json", "gzip", "brotli", "deflate", "stream", "multipart"] }
