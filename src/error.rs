@@ -19,5 +19,3 @@ pub enum ApiError {
     #[error("http {status}: {body}")]
     Http { status: StatusCode, body: String },
 }
-
-

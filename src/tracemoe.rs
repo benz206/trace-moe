@@ -128,5 +128,3 @@ pub fn build_query_path(base: &str, query: &SearchQuery) -> String {
     let qs = qp.finish();
     if qs.is_empty() { base.to_string() } else { format!("{}?{}", base, qs) }
 }
-
-

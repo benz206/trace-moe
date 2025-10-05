@@ -77,5 +77,3 @@ impl Client {
         Ok(value)
     }
 }
-
-
