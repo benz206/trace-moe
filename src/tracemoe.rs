@@ -7,6 +7,10 @@ use crate::error::Result;
 
 const DEFAULT_BASE: &str = "https://api.trace.moe/";
 
+/// Create a `Client` configured for the trace.moe API.
+///
+/// If an API key is provided, it will be sent via the `x-trace-key` header.
+/// For higher quotas, obtain a key from the trace.moe dashboard.
 pub fn new_client_with_key(api_key: Option<&str>) -> Result<Client> {
     let mut client = Client::new(DEFAULT_BASE)?;
     if let Some(key) = api_key {
@@ -20,6 +24,7 @@ pub fn new_client_with_key(api_key: Option<&str>) -> Result<Client> {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Response returned by trace.moe search endpoints.
 pub struct SearchResponse<TAnilist = i64> {
     pub frame_count: i64,
     pub error: String,
@@ -28,6 +33,7 @@ pub struct SearchResponse<TAnilist = i64> {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// A single search hit.
 pub struct SearchResult<TAnilist = i64> {
     pub anilist: TAnilist,
     pub filename: String,
@@ -44,6 +50,7 @@ pub struct SearchResult<TAnilist = i64> {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
+/// Episode info in results may be a number or text.
 pub enum Episode {
     Number(i64),
     Text(String),
@@ -51,6 +58,7 @@ pub enum Episode {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// AniList title variants.
 pub struct AnilistInfoTitle {
     pub native: Option<String>,
     pub romaji: Option<String>,
@@ -59,6 +67,7 @@ pub struct AnilistInfoTitle {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// AniList metadata when `anilist_info` is requested.
 pub struct AnilistInfo {
     pub id: i64,
     pub id_mal: Option<i64>,
@@ -69,6 +78,7 @@ pub struct AnilistInfo {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Response from `GET /me` describing quota and concurrency.
 pub struct MeResponse {
     pub id: String,
     pub priority: i64,
@@ -79,6 +89,7 @@ pub struct MeResponse {
 }
 
 #[derive(Default, Debug, Clone, Serialize)]
+/// Search query parameters for `search` endpoints.
 pub struct SearchQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
@@ -91,6 +102,7 @@ pub struct SearchQuery {
 }
 
 impl Client {
+    /// Search by image URL with optional parameters.
     pub async fn tracemoe_search_by_url<TAnilist: for<'de> serde::Deserialize<'de>>(
         &self,
         query: &SearchQuery,
@@ -99,6 +111,7 @@ impl Client {
         self.get_json::<SearchResponse<TAnilist>>(path).await
     }
 
+    /// Upload image bytes to search.
     pub async fn tracemoe_search_upload<TAnilist: for<'de> serde::Deserialize<'de>>(
         &self,
         bytes: impl Into<Vec<u8>>,
@@ -112,11 +125,13 @@ impl Client {
         Ok(Self::parse_json(resp).await?)
     }
 
+    /// Get current account quota and concurrency information.
     pub async fn tracemoe_me(&self) -> Result<MeResponse> {
         self.get_json("me").await
     }
 }
 
+/// Build a relative path with query string from a `SearchQuery`.
 pub fn build_query_path(base: &str, query: &SearchQuery) -> String {
     let mut url = url::Url::parse("https://dummy.invalid/").unwrap();
     url.set_path(base);
