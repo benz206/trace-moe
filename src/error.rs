@@ -13,6 +13,9 @@ pub enum ApiError {
     #[error("invalid url: {0}")]
     Url(#[from] url::ParseError),
 
+    #[error("invalid header value: {0}")]
+    InvalidHeader(#[from] reqwest::header::InvalidHeaderValue),
+
     #[error("serialization error: {0}")]
     Serde(#[from] serde_json::Error),
 

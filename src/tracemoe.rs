@@ -1,6 +1,6 @@
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::multipart::{Form, Part};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::client::Client;
 use crate::error::Result;
@@ -16,7 +16,7 @@ pub fn new_client_with_key(api_key: Option<&str>) -> Result<Client> {
     if let Some(key) = api_key {
         client = client.with_default_header(
             HeaderName::from_static("x-trace-key"),
-            HeaderValue::from_str(key).expect("valid api key header"),
+            HeaderValue::from_str(key)?,
         );
     }
     Ok(client)
@@ -43,7 +43,6 @@ pub struct SearchResult<TAnilist = i64> {
     pub to: f64,
     pub at: f64,
     pub similarity: f64,
-    #[serde(alias = "picture")]
     pub image: String,
     pub video: String,
 }
@@ -82,22 +81,17 @@ pub struct AnilistInfo {
 pub struct MeResponse {
     pub id: String,
     pub priority: i64,
-    #[serde(alias = "competition")]
     pub concurrency: i64,
     pub quota: i64,
     pub quota_used: i64,
 }
 
-#[derive(Default, Debug, Clone, Serialize)]
+#[derive(Default, Debug, Clone)]
 /// Search query parameters for `search` endpoints.
 pub struct SearchQuery {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub anilist_id: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub cut_borders: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub anilist_info: Option<bool>,
 }
 
@@ -122,7 +116,7 @@ impl Client {
             .multipart(form)
             .send()
             .await?;
-        Ok(Self::parse_json(resp).await?)
+        Self::parse_json(resp).await
     }
 
     /// Get current account quota and concurrency information.
@@ -132,14 +126,12 @@ impl Client {
 }
 
 /// Build a relative path with query string from a `SearchQuery`.
-pub fn build_query_path(base: &str, query: &SearchQuery) -> String {
-    let mut url = url::Url::parse("https://dummy.invalid/").unwrap();
-    url.set_path(base);
+fn build_query_path(base: &str, query: &SearchQuery) -> String {
     let mut qp = url::form_urlencoded::Serializer::new(String::new());
     if let Some(v) = &query.url { qp.append_pair("url", v); }
-    if let Some(v) = query.anilist_id { qp.append_pair("anilist_id", &v.to_string()); }
-    if let Some(true) = query.cut_borders { qp.append_pair("cut_borders", ""); }
-    if let Some(true) = query.anilist_info { qp.append_pair("anilist_info", ""); }
+    if let Some(v) = query.anilist_id { qp.append_pair("anilistID", &v.to_string()); }
+    if let Some(true) = query.cut_borders { qp.append_pair("cutBorders", ""); }
+    if let Some(true) = query.anilist_info { qp.append_pair("anilistInfo", ""); }
     let qs = qp.finish();
     if qs.is_empty() { base.to_string() } else { format!("{}?{}", base, qs) }
 }
